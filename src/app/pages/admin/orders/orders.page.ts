@@ -1,4 +1,12 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  ElementRef,
+  HostListener,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { EstadoPedido, Pedido } from '../../../core/models';
 import { OrderService } from '../../../core/services/order.service';
@@ -33,6 +41,26 @@ const TIPO_ENTREGA: Record<string, string> = {
   delivery: 'Delivery',
   recojo: 'Recojo en local',
 };
+
+const ATAJO_FILTROS: FiltroEstado[] = [
+  'todos',
+  ...(Object.keys(ESTADOS_PEDIDO) as EstadoPedido[]),
+];
+
+const ETIQUETAS_EDITABLES = ['input', 'textarea', 'select'];
+
+const DOBLE_ESPACIO_MS = 400;
+
+export function filtroPorTecla(key: string): FiltroEstado | null {
+  const indice = Number(key) - 1;
+  return Number.isInteger(indice) && indice >= 0 && indice < ATAJO_FILTROS.length
+    ? ATAJO_FILTROS[indice]
+    : null;
+}
+
+export function esDobleEspacio(anterior: number, ahora: number): boolean {
+  return anterior > 0 && ahora - anterior <= DOBLE_ESPACIO_MS;
+}
 
 @Component({
   selector: 'app-admin-orders',
@@ -84,6 +112,7 @@ const TIPO_ENTREGA: Record<string, string> = {
             <div class="admin-search">
               <app-icon name="lucideSearch" size="15" />
               <input
+                #buscador
                 class="input"
                 type="search"
                 placeholder="Buscar código, cliente o teléfono"
@@ -637,6 +666,7 @@ export class AdminOrdersPageComponent {
   private readonly orders = inject(OrderService);
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
+  private readonly buscador = viewChild<ElementRef<HTMLInputElement>>('buscador');
 
   readonly pedidos = this.orders.pedidos;
   readonly filtro = signal<FiltroEstado>('todos');
@@ -645,6 +675,8 @@ export class AdminOrdersPageComponent {
   readonly seleccionado = signal<Pedido | null>(null);
   readonly procesando = signal(false);
   readonly confirmandoCancelacion = signal(false);
+
+  private ultimoEspacio = 0;
 
   readonly estados = (
     Object.keys(ESTADOS_PEDIDO) as EstadoPedido[]
@@ -688,6 +720,43 @@ export class AdminOrdersPageComponent {
 
   conteo(estado: EstadoPedido): number {
     return this.pedidos().filter((pedido) => pedido.estado === estado).length;
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  alPresionarTecla(event: KeyboardEvent): void {
+    if (event.ctrlKey || event.altKey || event.metaKey) return;
+    if (this.seleccionado() !== null) return;
+
+    const objetivo = event.target;
+    if (
+      objetivo instanceof HTMLElement &&
+      ETIQUETAS_EDITABLES.includes(objetivo.tagName.toLowerCase())
+    ) {
+      return;
+    }
+
+    if (event.key === ' ') {
+      event.preventDefault();
+      const ahora = Date.now();
+      if (esDobleEspacio(this.ultimoEspacio, ahora)) {
+        this.ultimoEspacio = 0;
+        this.enfocarBusqueda();
+        return;
+      }
+      this.ultimoEspacio = ahora;
+      return;
+    }
+
+    this.ultimoEspacio = 0;
+    const filtro = filtroPorTecla(event.key);
+    if (filtro) this.filtro.set(filtro);
+  }
+
+  private enfocarBusqueda(): void {
+    const campo = this.buscador();
+    if (!campo) return;
+    campo.nativeElement.focus();
+    campo.nativeElement.select();
   }
 
   totalItems(pedido: Pedido): number {

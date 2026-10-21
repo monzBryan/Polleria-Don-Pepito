@@ -1,0 +1,180 @@
+REGISTRO DE DESPLIEGUE EN VERCEL
+Pollería Don Pepito · 20-21 de octubre de 2026
+================================================
+
+RESULTADO
+---------
+Dominio público:  https://polleria-don-pepito.vercel.app
+Proyecto Vercel:  monzonbarrientosb-6615/polleria-don-pepito
+Project ID:       prj_zWForgnPCjtrmprJltoZmn5jjY0n
+Deployment:       dpl_Cyqyz2yE4JGgQR5NDvCnvmUJf6Jh  (estado READY, promovido a producción)
+Hosting:          sitio estático (preset Angular dentro de Vercel Services)
+Build:            npm ci && npm run build
+Salida publicada: dist/don-pepito-web/browser
+Node usado:       24.x (local v24.16.0, npm 11.13.0)
+
+Nota: la guía original contemplaba Render. En esta sesión no había MCP ni
+integración de Render disponible, así que se desplegó en Vercel, que ya estaba
+conectado a la cuenta. El archivo render.yaml quedó preparado por si se usa
+Render más adelante.
+
+
+PASO 1. REVISIÓN DEL PROYECTO Y DE LA GUÍA
+------------------------------------------
+- Se leyó GUIA_DESPLIEGUE_VERCEL_RENDER.txt y se confirmó:
+  framework Angular 22, comando npm run build y salida en
+  dist/don-pepito-web/browser.
+- Se revisó package.json, angular.json, src/index.html (base href="/") y
+  src/environments/environment.ts (contenía la URL y la clave anon de Supabase
+  escritas en el código).
+- Se comprobó el estado de Git: repositorio local sin commits, rama master, sin
+  remoto configurado y con node_modules y dist ya ignorados.
+
+
+PASO 2. CREDENCIALES FUERA DEL REPOSITORIO
+------------------------------------------
+- Se creó tools/generate-env.mjs: script que genera
+  src/environments/env.generated.ts en cada build leyendo variables de entorno
+  (SITE_URL, SUPABASE_URL, SUPABASE_ANON_KEY, USE_DEMO_FALLBACK y DEMO_*), con
+  soporte opcional para .env.local.
+- Se reescribió src/environments/environment.ts para consumir esos valores
+  generados; los datos de contacto públicos quedaron intactos.
+- Se añadieron scripts en package.json: prepare, prestart, prebuild, pretest y
+  env:generate.
+- Se creó .env.example con las variables y valores de demostración.
+- Se agregó al .gitignore: .env, .env.local, src/environments/env.generated.ts,
+  .secrets/, dev-server.log, .freebuff/ y .vercel/.
+- Resultado: el repositorio no contiene ninguna clave; el build puede compilar
+  sin credenciales y la app funciona en modo demo.
+
+
+PASO 3. CONFIGURACIÓN DE DESPLIEGUE
+-----------------------------------
+- Se creó vercel.json con la configuración del servicio Angular y el enrutado
+  de la SPA.
+- Se creó .vercelignore para no subir dist, node_modules, .secrets, docs,
+  supabase, .env ni .env.local.
+- Se añadió "engines": { "node": "24.x" } a package.json.
+- Se creó render.yaml (blueprint alternativo para Render) con rewrite
+  /* -> /index.html y NODE_VERSION 24.16.0.
+- Se creó .env.example como referencia de variables.
+- Se actualizó README.md con el dominio, el comando de despliegue y el manejo
+  de credenciales.
+
+
+PASO 4. VALIDACIÓN LOCAL ANTES DE PUBLICAR
+------------------------------------------
+- npm run build -> OK (bundle inicial ~672 kB, 52 archivos en dist).
+- npm test -- --watch=false -> OK.
+- Se verificó que el bundle local no contiene la clave de Supabase ni el ref
+  del proyecto (solo aparece la cadena "*.supabase.co" de la librería).
+- Se sirvió dist con un servidor estático con fallback SPA y se revisó en el
+  navegador: inicio, carta, promociones, contacto con mapa y login demo.
+
+
+PASO 5. AUTENTICACIÓN Y CREACIÓN DEL PROYECTO
+---------------------------------------------
+- Vercel CLI 65.0.0 no tenía sesión iniciada; se ejecutó el flujo de
+  dispositivo:
+      npx vercel login
+  (imprime una URL y un código que el usuario aprueba en el navegador).
+- Se confirmó la cuenta: monzonbarrientosb-6615 (plan Hobby).
+- Se creó y enlazó el proyecto:
+      npx vercel link --yes --project polleria-don-pepito
+  Vercel agregó automáticamente la sección "services" a vercel.json y creó
+  .env.local (con VERCEL_OIDC_TOKEN, ya ignorado por Git).
+
+
+PASO 6. VARIABLE DE DOMINIO
+---------------------------
+- Se agregó SITE_URL para producción:
+      printf 'https://polleria-don-pepito.vercel.app\n' | \
+        npx vercel env add SITE_URL production --no-sensitive
+- Se usa para canonical y Open Graph; el generador la lee en build.
+
+
+PASO 7. DESPLIEGUE
+------------------
+- Publicación de producción:
+      npx vercel deploy --prod --yes
+- Alias asignado automáticamente: https://polleria-don-pepito.vercel.app
+
+
+PASO 8. PROBLEMAS ENCONTRADOS Y CORRECCIONES
+--------------------------------------------
+1) Conflicto con el preset Services
+   Ver: "The top-level properties installCommand, buildCommand,
+   outputDirectory, framework cannot be used with services".
+   Causa: Vercel CLI 65 creó el proyecto con el preset Services y no admite
+   propiedades de build en la raíz de vercel.json.
+   Solución: dejar el build en la sección services
+   (root ".", framework "angular", buildCommand "npm ci && npm run build").
+
+2) Todos los archivos JS se servían como HTML
+   Causa: la reescritura /(.*) -> /index.html se aplicaba antes que el servicio
+   y capturaba también JS, CSS y fuentes (todo devolvía index.html de 9.7 kB).
+   Solución: primero se limitó a rutas sin extensión y finalmente se eliminó:
+   vercel.json solo enruta el tráfico al servicio Angular, que resuelve el
+   fallback SPA para rutas desconocidas. Verificado con main-*.js, chunk-*.js,
+   styles-*.css, fuentes, imágenes, site.webmanifest y robots.txt.
+
+3) SITE_URL no llegaba al build
+   Causa: la variable se creó como tipo "Secret"; el bundle siguió mostrando
+   el dominio por defecto.
+   Solución: se eliminó y se volvió a crear como Config (--no-sensitive),
+   porque el dominio es información pública. Tras el nuevo deploy, el canonical
+   quedó en https://polleria-don-pepito.vercel.app/<ruta>.
+
+4) Página en blanco en producción
+   Error en consola: "supabaseUrl is required".
+   Causa: SupabaseService creaba el cliente aunque no hubiera credenciales.
+   Solución: src/app/core/services/supabase.service.ts crea un cliente inerte
+   cuando faltan datos y registra un aviso; la app queda en modo demo sin
+   claves en el bundle.
+   Complemento: src/app/app.component.ts sincroniza canonical y og:url con
+   SITE_URL en tiempo de ejecución.
+
+
+PASO 9. VERIFICACIÓN EN PRODUCCIÓN
+----------------------------------
+Con curl y con el navegador sobre https://polleria-don-pepito.vercel.app:
+- / , /carta , /promociones , /contacto , /admin , /legal/puntos -> 200.
+- Recargar directamente /promociones y /contacto devuelve la SPA (sin 404).
+- site.webmanifest -> 200 application/manifest+json.
+- robots.txt -> 200 text/plain.
+- /admin redirige a /login; el botón "Admin demo" entra al panel
+  (admin@donpepito.pe / admin123) y muestra "Hola, Pepito".
+- Contacto carga el iframe de OpenStreetMap.
+- Canonical y og:url apuntan al dominio de Vercel.
+- El bundle publicado no contiene el JWT ni el ref de Supabase.
+- npm test -- --watch=false: 2 archivos, 15 pruebas en verde.
+
+
+ESTADO DE GIT
+-------------
+- Commit d42eae2 "Preparar despliegue estático en Render".
+- Commit b5dacc6 "Publicar la web en Vercel sin credenciales en el repositorio".
+- No se hizo push: el repositorio monzBryan/Polleria-Don-Pepito es privado y no
+  había credenciales Git en la máquina. Por eso Vercel no está enlazado a Git
+  y no hay despliegue automático por push.
+
+
+CÓMO ACTUALIZAR EL SITIO
+------------------------
+    npx vercel deploy --prod --yes
+
+Si más adelante se conecta el repositorio de GitHub a Vercel, cada push a main
+puede redeployar automáticamente.
+
+
+PENDIENTES
+----------
+- Subir el código a GitHub y conectar el repo al proyecto de Vercel para
+  auto-deploy.
+- public/sitemap.xml y public/robots.txt siguen apuntando a
+  https://donpepito.pe; conviene actualizarlos si se usa un dominio definitivo.
+- La protección de deployments de Vercel sigue activa para URLs de preview; el
+  dominio de producción es público.
+- Para usar la base real: configurar SUPABASE_URL, SUPABASE_ANON_KEY y
+  USE_DEMO_FALLBACK=false en Vercel y volver a desplegar (nunca la clave
+  service_role en el frontend).
