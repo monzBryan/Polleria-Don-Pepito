@@ -1,0 +1,30 @@
+# Despliegue de Pollería Don Pepito en Render (sitio estático).
+# Blueprint: Render > New > Blueprint > repositorio Polleria-Don-Pepito.
+# Las credenciales se piden al crear el servicio (sync: false) y quedan
+# guardadas en Render, nunca en el repositorio.
+services:
+  - type: web
+    name: polleria-don-pepito
+    runtime: static
+    branch: main
+    autoDeploy: true
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist/don-pepito-web/browser
+    routes:
+      # SPA Angular: cualquier ruta desconocida devuelve index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: 24.16.0
+      # Dominio publico del sitio (canonical, SEO y enlaces absolutos).
+      - key: SITE_URL
+        sync: false
+      # Supabase (opcional). Si se dejan vacias, la app compila en modo demo.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: USE_DEMO_FALLBACK
+        value: 'true'

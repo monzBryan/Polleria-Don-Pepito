@@ -1,0 +1,23 @@
+{
+  "name": "Pollería Don Pepito",
+  "short_name": "Don Pepito",
+  "description": "Pollo a la brasa al carbón, parrillas y combos en Ica.",
+  "lang": "es-PE",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFF8EE",
+  "theme_color": "#0A0A0B",
+  "icons": [
+    {
+      "src": "brand/favicon-64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "brand/favicon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,338 @@
+DESCRIPCIÓN GENERAL DEL PROYECTO
+================================
+
+Nombre: Pollería Don Pepito Web
+Carpeta: Polleria Don Pepito
+Tipo: Aplicación web SPA (Single Page Application) para una pollería ubicada en Ica, Perú.
+Framework: Angular 22 (componentes standalone, change detection zoneless).
+Lenguaje: TypeScript 6.
+Estilos: SCSS con sistema de tokens, componentes con estilos encapsulados y estilos globales.
+Backend opcional: Supabase (PostgreSQL + Auth + RLS).
+Modo demostración: activo por defecto (useDemoFallback = true), funciona sin conexión a Supabase usando datos locales y localStorage.
+
+El proyecto incluye tienda online, carrito, checkout, seguimiento de pedidos, cuentas de usuario, club de puntos, reservas de mesas y un panel administrativo completo.
+
+
+TECNOLOGÍAS Y DEPENDENCIAS PRINCIPALES
+======================================
+
+- Angular 22.2: core, common, compiler, forms, router y platform-browser.
+- @ng-icons/core y @ng-icons/lucide: iconografía SVG.
+- @supabase/supabase-js: autenticación y acceso a datos remotos.
+- chart.js: gráficos del panel administrativo y reportes.
+- RxJS 7.8.
+- Vitest 5: pruebas unitarias.
+- jsdom: entorno de pruebas.
+- Prettier: formato de código.
+- TypeScript 6.
+- Angular CLI 22 y @angular/build.
+
+Comandos disponibles (package.json):
+- npm start / ng serve: servidor de desarrollo en http://localhost:4200
+- npm run build / ng build: compilación de producción en dist/
+- npm run watch: compilación en modo desarrollo con recarga
+- npm test / ng test: pruebas unitarias con Vitest
+
+
+ESTRUCTURA DE LA CARPETA RAÍZ
+=============================
+
+.angular/                         Caché interna de Angular CLI.
+.freebuff/                        Configuración/archivos de herramienta local.
+.vscode/                          Configuración de Visual Studio Code.
+dist/                             Resultado compilado del proyecto (generado).
+docs/                             Documentación de diseño y especificaciones.
+node_modules/                     Dependencias instaladas (generado).
+public/                           Recursos estáticos públicos.
+src/                              Código fuente de la aplicación.
+supabase/                         Scripts SQL y documentación de Supabase.
+tools/                            Scripts auxiliares de procesamiento de imágenes.
+
+01_MODELO_RESTAURANTE_SQLSERVER.sql   Script SQL Server del modelo de restaurante.
+02_TABLA_PUNTOS_SUPABASE.sql          Script de tabla de puntos para Supabase.
+1.txt                                 Archivo de texto vacío/auxiliar.
+angular.json                          Configuración de Angular CLI y presupuestos de build.
+dev-server.log                        Registro local del servidor de desarrollo.
+logo-don-pepito.png                   Logotipo original de Don Pepito.
+package.json                          Dependencias, metadatos y comandos npm.
+package-lock.json                     Árbol exacto de dependencias instaladas.
+README.md                             Guía básica de Angular CLI.
+tsconfig.json                         Configuración TypeScript general.
+tsconfig.app.json                     Configuración TypeScript de la aplicación.
+tsconfig.spec.json                    Configuración TypeScript de las pruebas.
+.editorconfig                         Reglas de estilo para editores.
+.gitignore                            Archivos excluidos de Git.
+.prettierrc                           Reglas de formato Prettier.
+DESCRIPCION_PROYECTO.txt              Este archivo descriptivo.
+
+
+CARPETA src/
+============
+
+index.html
+  Documento HTML principal. Incluye metadatos SEO, Open Graph, Twitter Card,
+  JSON-LD de restaurante, favicons, precarga de fuentes locales y una pantalla
+  de carga (boot splash) de Don Pepito visible mientras Angular arranca.
+
+main.ts
+  Punto de entrada. Ejecuta bootstrapApplication con App y appConfig.
+
+styles.scss
+  Punto de entrada de estilos globales. Importa las hojas parciales.
+
+styles/
+  _fonts.scss       Fuentes locales Fraunces y Manrope en formato WOFF2.
+  _tokens.scss      Variables CSS de color, tipografía, radios, sombras y layout.
+  _base.scss        Reset, estilos base, tipografía y elementos comunes.
+  _utilities.scss   Clases utilitarias.
+  _admin.scss       Estilos compartidos del panel administrativo.
+  _animations.scss  Animaciones y transiciones globales.
+
+environments/
+  environment.ts    Configuración de entorno: Supabase, datos de contacto,
+                    modo demo, URL de mapas OpenStreetMap y credenciales demo.
+
+public/
+  favicon.ico                 Favicon multi-tamaño generado desde el logo.
+  robots.txt                  Reglas para buscadores.
+  sitemap.xml                 Mapa del sitio.
+  site.webmanifest            Manifiesto PWA básico.
+  brand/
+    logo-transparent.png      Logo rojo sobre fondo transparente.
+    logo-cream.png            Logo en versión crema.
+    logo-gold.png             Logo en versión dorada (usado en el splash).
+    favicon-64.png            Favicon 64x64.
+    favicon-180.png           Icono Apple Touch 180x180.
+    og-image.jpg              Imagen para compartir en redes sociales.
+  fonts/
+    fraunces-latin.woff2      Tipografía de títulos, servida localmente.
+    manrope-latin.woff2       Tipografía de texto, servida localmente.
+  img/
+    fallback-food.svg         Imagen de respaldo para productos sin foto.
+
+
+CARPETA src/app/
+================
+
+app.component.ts / .html / .scss
+  Componente raíz. Contiene únicamente el router-outlet y los estilos base.
+
+app.config.ts
+  Configuración global: zoneless change detection, iconos, router con
+  component input binding, scroll en memoria, anchor scrolling y view transitions.
+
+app.routes.ts
+  Definición de todas las rutas públicas y administrativas, con lazy loading,
+  títulos de página y guards de autenticación/rol.
+
+layouts/
+  public-layout.component.ts
+    Estructura del sitio público: barra de anuncios, navbar, contenido,
+    footer, botón de WhatsApp, carrito lateral y contenedor de notificaciones.
+  admin-layout.component.ts
+    Estructura del panel: sidebar agrupado, cabecera, títulos y contenido.
+
+pages/
+  home/              Página de inicio: hero, categorías, favoritos, historia,
+                     club de puntos, testimonios, contacto/mapa y CTA.
+  menu/              Carta completa con filtros por categoría y búsqueda.
+  promotions/        Página de promociones y combos destacados.
+  about/             Historia y valores de la pollería.
+  contact/           Datos de contacto, horarios, mapa OpenStreetMap,
+                     zonas de delivery y canales de atención.
+  reservations/      Formulario público de reserva de mesa.
+  cart/              Carrito de compras y resumen del pedido.
+  checkout/          Datos de entrega, distritos, pago, puntos y confirmación.
+  order-tracking/    Seguimiento del estado del pedido por código.
+  account/           Panel del cliente: resumen, pedidos, puntos e historial.
+  auth/              Inicio de sesión y registro de cuentas.
+  legal/             Términos, privacidad, libro de reclamaciones y reglamento
+                     del programa de puntos.
+  admin/
+    dashboard/       Métricas, ventas, pedidos recientes y gráficos.
+    orders/          Gestión y cambio de estado de pedidos.
+    products/        CRUD de productos de la carta.
+    categories/      CRUD de categorías.
+    clients/         Lista de clientes, ajuste manual de puntos y ficha.
+    points/          Configuración del programa de puntos y movimientos.
+    users/           Usuarios y roles.
+    tables/          Gestión de mesas y ambientes del salón.
+    reservations/    Gestión de reservas.
+    reports/         Reportes y estadísticas con Chart.js.
+    settings/        Configuración web, contacto, delivery y redes.
+
+core/models/
+  catalogo.models.ts   Categorías, productos, configuración web y de puntos.
+  usuario.models.ts    Perfil, roles, cuentas, transacciones y autenticación.
+  pedido.models.ts     Pedidos, ítems, estados, pagos y tipos de entrega.
+  admin.models.ts      Filas y datos del panel administrativo.
+  salon.models.ts      Mesas, ambientes y reservas.
+  index.ts             Exportación central de modelos.
+
+core/services/
+  auth.service.ts          Login, registro, sesión, perfiles y roles. Usa demo
+                           o Supabase según environment.useDemoFallback.
+  cart.service.ts          Carrito reactivo con persistencia en localStorage.
+  catalog.service.ts       Categorías y productos; combina datos demo/remotos.
+  dashboard.service.ts     Métricas y agregados para el dashboard.
+  demo-store.service.ts    Estado completo de la demo persistido en localStorage.
+  order.service.ts         Creación, consulta y actualización de pedidos.
+  points.service.ts        Reglas de acumulación, canje y equivalencia de puntos.
+  salon.service.ts         Mesas, disponibilidad y reservas.
+  site-config.service.ts   Configuración del sitio, delivery, horarios y redes.
+  supabase.service.ts      Cliente Supabase y traducción de errores.
+  toast.service.ts         Notificaciones emergentes.
+  ui.service.ts            Estado de carrito lateral, menú móvil, búsqueda y overlays.
+
+core/guards/
+  auth.guard.ts     Exige sesión iniciada.
+  admin.guard.ts    Exige rol administrador.
+  guest.guard.ts    Impide acceder a login/registro con sesión activa.
+
+core/utils/
+  format.ts         Fechas, horas, teléfonos, iniciales y formatos.
+  order-status.ts   Etiquetas, colores y textos de estados de pedido.
+  points.ts         Cálculos de puntos, descuentos, topes y equivalencias.
+
+data/
+  demo-data.ts      Datos de demostración: categorías, productos, pedidos,
+                    clientes, transacciones, mesas, reservas, testimonios,
+                    configuración del sitio y credenciales demo.
+
+shared/components/
+  announcement-bar.component.ts    Barra superior de anuncios.
+  auth-shell.component.ts          Marco visual para login/registro.
+  cart-drawer.component.ts         Carrito lateral deslizante.
+  empty-state.component.ts         Estado vacío reutilizable.
+  footer.component.ts              Pie de página con enlaces y contacto.
+  icon.component.ts                Renderizado de iconos SVG.
+  logo.component.ts                Logo con variantes estáticas.
+  modal.component.ts               Modal reutilizable con proyección.
+  navbar.component.ts              Navegación de escritorio y móvil.
+  product-card.component.ts        Tarjeta de producto con acciones de carrito.
+  quantity-stepper.component.ts    Selector de cantidad.
+  status-badge.component.ts        Etiqueta visual de estados.
+  toast-container.component.ts     Contenedor de notificaciones.
+  whatsapp-button.component.ts     Botón flotante de WhatsApp.
+
+shared/directives/
+  image-fallback.directive.ts      Reemplaza imágenes que fallan por un fallback.
+
+shared/pipes/
+  soles.pipe.ts                    Formato monetario en soles peruanos.
+
+shared/icons.ts
+  Registro central de iconos Lucide y de marca usados por la aplicación.
+
+features/
+  Carpeta reservada para una futura organización por dominios. Actualmente
+  las funcionalidades están implementadas en pages/.
+
+
+RUTAS PÚBLICAS PRINCIPALES
+==========================
+
+/                       Inicio
+/carta                  Carta completa
+/promociones            Promociones y combos
+/nosotros               Historia de la pollería
+/contacto               Contacto, horarios, mapa y zonas de delivery
+/reservas               Reserva de mesa
+/carrito                Carrito
+/checkout               Proceso de compra
+/pedido/:codigo         Seguimiento de pedido
+/cuenta                 Mi cuenta (requiere sesión)
+/auth y /login          Iniciar sesión
+/register y /registro   Crear cuenta
+/legal/terminos         Términos y condiciones
+/legal/privacidad       Política de privacidad
+/legal/reclamos         Libro de reclamaciones
+/legal/puntos           Reglamento del programa de puntos
+
+RUTAS ADMINISTRATIVAS (requieren sesión y rol admin)
+====================================================
+
+/admin                  Dashboard
+/admin/pedidos          Pedidos
+/admin/productos        Productos
+/admin/categorias       Categorías
+/admin/clientes         Clientes
+/admin/puntos           Programa de puntos
+/admin/usuarios         Usuarios y roles
+/admin/mesas            Mesas del salón
+/admin/reservas         Reservas
+/admin/reportes         Reportes
+/admin/configuracion    Configuración
+
+
+FUNCIONALIDADES DESTACADAS
+==========================
+
+- Catálogo de productos con categorías, búsqueda, filtros, precios, descuentos,
+  etiquetas, nivel de picante y disponibilidad.
+- Carrito persistente con cantidades, notas por producto, subtotal y delivery.
+- Checkout con entrega o recojo, distritos de Ica, métodos de pago, canje de
+  puntos y validaciones.
+- Seguimiento de pedidos por código y estados.
+- Registro e inicio de sesión con roles cliente/administrador.
+- Club de puntos sin niveles: todos los miembros tienen los mismos beneficios.
+  Se gana 1 punto por cada S/ 1 y 100 puntos equivalen a S/ 1 de descuento.
+- Reservas de mesas y gestión de disponibilidad del salón.
+- Panel administrativo con CRUDs, métricas, reportes y configuración.
+- Integración opcional con Supabase y modo demo local automático.
+- Diseño responsive con navbar móvil, carrito lateral y botón de WhatsApp.
+- Mapa de ubicación con OpenStreetMap en Inicio y Contacto.
+- Carga inicial optimizada con fuentes locales, precarga y pantalla splash.
+- SEO básico: metadatos, Open Graph, Twitter Card, JSON-LD, sitemap y robots.
+
+Zonas de delivery configuradas:
+Ica, La Tinguiña, Parcona, San Juan Bautista, Los Aquijes y Tate.
+
+
+ACCESOS DE DEMOSTRACIÓN
+=======================
+
+Administrador:
+  Correo: admin@donpepito.pe
+  Contraseña: admin123
+
+Cliente:
+  Correo: cliente@demo.pe
+  Contraseña: demo1234
+
+Estos accesos solo aplican cuando useDemoFallback está activo.
+
+
+BASE DE DATOS Y SUPABASE
+========================
+
+supabase/01_modelo_restaurante_postgres.sql  Modelo relacional del restaurante.
+supabase/02_puntos_supabase_postgres.sql     Tablas y funciones del programa de puntos.
+supabase/03_datos_polleria.sql               Datos iniciales de la pollería.
+supabase/04_rls_seguridad.sql                Políticas RLS de seguridad.
+supabase/README.md                           Instrucciones de instalación.
+
+En la raíz también existen:
+01_MODELO_RESTAURANTE_SQLSERVER.sql          Variante del modelo para SQL Server.
+02_TABLA_PUNTOS_SUPABASE.sql                 Script puntual de la tabla de puntos.
+
+
+DOCUMENTACIÓN Y HERRAMIENTAS
+============================
+
+docs/superpowers/specs/2026-10-20-polleria-don-pepito-design.md
+  Especificación de diseño del proyecto.
+
+tools/process-logo.ps1
+  Script PowerShell para procesar el logo y generar variantes de imagen.
+
+
+CONFIGURACIÓN Y CALIDAD
+=======================
+
+- Angular standalone components en todas las páginas y componentes.
+- Lazy loading por ruta para reducir el bundle inicial.
+- Change detection zoneless.
+- Presupuestos de build: 700 kB de advertencia y 1 MB de error para el bundle inicial.
+- Pruebas unitarias con Vitest y jsdom.
+- Estado actual verificado: npm run build y npm test -- --watch=false pasan correctamente.

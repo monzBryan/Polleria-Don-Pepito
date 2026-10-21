@@ -1,0 +1,549 @@
+GUÍA PASO A PASO PARA DESPLEGAR POLLERÍA DON PEPITO
+===================================================
+
+Esta guía explica cómo publicar el proyecto en Vercel (recomendado para esta
+aplicación Angular) o en Render. Incluye preparación local, GitHub, variables,
+configuración de rutas SPA, Supabase, dominio y solución de problemas.
+
+Datos técnicos del proyecto:
+- Framework: Angular 22.
+- Comando de build: npm run build
+- Carpeta generada: dist/don-pepito-web/browser
+- Archivo de entrada: dist/don-pepito-web/browser/index.html
+- Es una SPA: todas las rutas deben devolver index.html.
+
+
+==================================================
+PARTE 0. ANTES DE EMPEZAR
+==================================================
+
+Necesitas:
+1. Una cuenta de GitHub: https://github.com
+2. Una cuenta de Vercel: https://vercel.com
+   o una cuenta de Render: https://render.com
+3. Git instalado en tu computadora.
+4. Node.js 22.12 o superior (recomendado 24.x).
+5. Una terminal abierta en la carpeta del proyecto.
+
+Verifica Node y npm:
+  node -v
+  npm -v
+
+Verifica que estás en la carpeta correcta:
+  Get-Location
+
+Debe terminar en:
+  ...\Polleria Don Pepito
+
+IMPORTANTE:
+- No subas node_modules ni dist a GitHub. Ya están excluidos en .gitignore.
+- El archivo src/environments/environment.ts contiene la configuración de
+  Supabase y el modo demo. Los cambios ahí requieren volver a compilar.
+- Las variables de entorno de Vercel/Render NO reemplazan automáticamente los
+  valores de environment.ts. Si necesitas cambiarlos, edita ese archivo y haz
+  commit antes de desplegar.
+
+
+==================================================
+PARTE 1. VERIFICAR EL PROYECTO EN LOCAL
+==================================================
+
+1. Instala dependencias:
+
+   npm install
+
+2. Compila en modo producción:
+
+   npm run build
+
+3. Confirma que se creó esta carpeta:
+
+   dist\don-pepito-web\browser
+
+   Dentro debe existir:
+
+   dist\don-pepito-web\browser\index.html
+
+4. Ejecuta las pruebas:
+
+   npm test -- --watch=false
+
+5. Prueba la aplicación en local:
+
+   npm start
+
+   Abre: http://localhost:4200
+
+   Revisa:
+   - Inicio carga y se ve el splash mientras arranca.
+   - Carta y Promociones abren correctamente.
+   - Contacto muestra el mapa.
+   - Carrito y checkout funcionan.
+   - El panel /admin abre con el usuario administrador demo.
+
+6. Detén el servidor con Ctrl + C.
+
+Si el build o los tests fallan, corrígelo antes de desplegar.
+
+
+==================================================
+PARTE 2. SUBIR EL PROYECTO A GITHUB
+==================================================
+
+Si la carpeta todavía no es un repositorio Git:
+
+1. Inicializa Git:
+
+   git init
+
+2. Revisa qué archivos se subirán:
+
+   git status
+
+   No deben aparecer node_modules ni dist.
+
+3. Agrega los archivos:
+
+   git add .
+
+4. Crea el primer commit:
+
+   git commit -m "Preparar despliegue de Pollería Don Pepito"
+
+5. Crea un repositorio nuevo y vacío en GitHub:
+   - Entra a https://github.com/new
+   - Nombre sugerido: polleria-don-pepito
+   - Visibilidad: privado o público
+   - NO marques "Add a README" ni ".gitignore"
+
+6. Conecta el repositorio local con GitHub:
+
+   git branch -M main
+   git remote add origin https://github.com/TU_USUARIO/polleria-don-pepito.git
+   git push -u origin main
+
+   Cambia TU_USUARIO por tu usuario real de GitHub.
+
+7. Verifica en GitHub que aparezcan:
+   src/, public/, package.json, angular.json, etc.
+   No deben aparecer node_modules ni dist.
+
+
+==================================================
+PARTE 3. DESPLEGAR EN VERCEL (RECOMENDADO)
+==================================================
+
+Vercel es la opción más simple para una SPA Angular y ofrece HTTPS y dominio
+gratis en el plan Hobby.
+
+PASO 3.1. Crear el proyecto
+---------------------------
+
+1. Entra a https://vercel.com y haz clic en "Sign Up" o "Log In".
+2. Elige "Continue with GitHub".
+3. Autoriza a Vercel para acceder a tus repositorios.
+4. En el panel, haz clic en "Add New..." y luego "Project".
+5. Busca y selecciona el repositorio:
+   polleria-don-pepito
+6. Haz clic en "Import".
+
+PASO 3.2. Configurar el build
+-----------------------------
+
+En la pantalla de configuración usa estos valores:
+
+  Framework Preset:        Angular
+  Root Directory:          ./
+  Build Command:           npm run build
+  Output Directory:        dist/don-pepito-web/browser
+  Install Command:         npm install
+  Node.js Version:         22.x o 24.x
+
+Si Vercel detecta otro Output Directory, cámbialo manualmente a:
+  dist/don-pepito-web/browser
+
+No agregues variables de entorno salvo que las uses en el código.
+
+PASO 3.3. Configurar las rutas de la SPA
+----------------------------------------
+
+Angular necesita que rutas como /promociones, /contacto o /admin funcionen
+también al recargar la página o al entrar directamente por URL.
+
+Opción A: desde el panel de Vercel
+1. Abre el proyecto en Vercel.
+2. Ve a Settings > Rewrites.
+3. Agrega una regla:
+   Source:      /(.*)
+   Destination: /index.html
+4. Guarda y vuelve a desplegar.
+
+Opción B: crear un archivo vercel.json en la raíz
+Crea el archivo vercel.json junto a package.json con este contenido:
+
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/don-pepito-web/browser",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+
+Luego haz commit y push:
+
+  git add vercel.json
+  git commit -m "Configurar rutas SPA para Vercel"
+  git push
+
+PASO 3.4. Desplegar
+-------------------
+
+1. Haz clic en "Deploy".
+2. Espera a que termine la instalación y el build.
+3. Vercel te dará una URL parecida a:
+   https://polleria-don-pepito.vercel.app
+4. Ábrela y prueba la aplicación.
+
+PASO 3.5. Redeploys automáticos
+-------------------------------
+
+Cada vez que hagas push a la rama main, Vercel volverá a desplegar
+automáticamente. Para actualizar:
+
+  git add .
+  git commit -m "Actualizar sitio"
+  git push
+
+PASO 3.6. Desplegar desde la terminal (opcional)
+------------------------------------------------
+
+Si prefieres usar la CLI:
+
+  npm install -g vercel
+  vercel login
+  vercel
+  vercel --prod
+
+La primera vez te pedirá confirmar el proyecto y la carpeta de salida.
+
+
+==================================================
+PARTE 4. DESPLEGAR EN RENDER (ALTERNATIVA)
+==================================================
+
+Render también puede publicar una SPA Angular como sitio estático. No uses un
+"Web Service" para este proyecto; usa "Static Site".
+
+PASO 4.1. Crear el sitio estático
+---------------------------------
+
+1. Entra a https://render.com y crea una cuenta.
+2. Conecta tu cuenta de GitHub.
+3. En el dashboard haz clic en "New +".
+4. Selecciona "Static Site".
+5. Conecta el repositorio polleria-don-pepito.
+6. Configura:
+
+   Name:                polleria-don-pepito
+   Branch:              main
+   Root Directory:      (dejar vacío)
+   Build Command:       npm install && npm run build
+   Publish Directory:   dist/don-pepito-web/browser
+
+7. En "Environment Variables" agrega si es necesario:
+
+   NODE_VERSION = 24.16.0
+
+   También puedes usar 22.12.0 si Render no acepta 24.16.0.
+
+8. Haz clic en "Create Static Site".
+
+PASO 4.2. Configurar las rutas SPA en Render
+--------------------------------------------
+
+1. Abre el servicio creado en Render.
+2. Ve a "Redirects/Rewrites".
+3. Agrega una regla:
+
+   Source:       /*
+   Destination:  /index.html
+   Action:       Rewrite
+
+4. Guarda los cambios.
+5. Haz clic en "Manual Deploy" > "Deploy latest commit" si no se desplegó solo.
+
+Sin esta regla, al recargar /promociones o /contacto Render mostrará 404.
+
+PASO 4.3. Verificar el despliegue
+---------------------------------
+
+Render te dará una URL parecida a:
+
+  https://polleria-don-pepito.onrender.com
+
+Ábrela y prueba:
+- La página de inicio.
+- Recargar directamente /promociones.
+- Recargar directamente /contacto.
+- El panel /admin.
+
+PASO 4.4. Actualizaciones
+-------------------------
+
+Cada push a main puede redeployar automáticamente si la opción "Auto-Deploy"
+está activa. También puedes usar "Manual Deploy" desde el panel.
+
+PASO 4.5. Configuración opcional con render.yaml
+------------------------------------------------
+
+Si quieres guardar la configuración en el repositorio, crea render.yaml en la
+raíz con:
+
+services:
+  - type: web
+    name: polleria-don-pepito
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist/don-pepito-web/browser
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: 24.16.0
+
+Luego haz commit y push. Render detectará el archivo al crear el servicio.
+
+
+==================================================
+PARTE 5. CONFIGURACIÓN DE PRODUCCIÓN
+==================================================
+
+5.1. Cambiar la URL del sitio
+-----------------------------
+
+El archivo src/environments/environment.ts contiene:
+
+  siteUrl: 'https://donpepito.pe'
+
+Si vas a usar el dominio de Vercel/Render mientras pruebas, cambia siteUrl por
+la URL real del despliegue. Esto afecta canonical, sitemap y datos SEO.
+
+Después del cambio:
+
+  git add src/environments/environment.ts
+  git commit -m "Actualizar URL del sitio"
+  git push
+
+5.2. Modo demo y Supabase
+-------------------------
+
+Actualmente:
+
+  useDemoFallback: true
+
+Con true, la aplicación usa datos locales y no depende de Supabase.
+Para usar la base de datos real:
+
+1. Configura las tablas con los scripts de la carpeta supabase/.
+2. Revisa supabase/README.md.
+3. Verifica supabaseUrl y supabaseAnonKey en environment.ts.
+4. Cambia:
+
+   useDemoFallback: false
+
+5. Vuelve a compilar y desplegar.
+
+IMPORTANTE:
+- La clave anon de Supabase es pública por diseño, pero debes tener RLS
+  (Row Level Security) activo. Nunca pongas la service_role key en el frontend.
+- Si activas Supabase Auth, configura las URLs de redirección (ver 5.3).
+
+5.3. Configurar Supabase Auth para el dominio
+---------------------------------------------
+
+En Supabase:
+1. Ve a Authentication > URL Configuration.
+2. Site URL: escribe tu dominio final, por ejemplo:
+   https://polleria-don-pepito.vercel.app
+   o https://tudominio.com
+3. Redirect URLs: agrega:
+   https://polleria-don-pepito.vercel.app/**
+   https://tudominio.com/**
+4. Guarda.
+
+Si no haces esto, la confirmación de correo o la recuperación de contraseña
+pueden redirigir a localhost o fallar.
+
+5.4. Dominio personalizado
+--------------------------
+
+En Vercel:
+1. Abre el proyecto.
+2. Ve a Settings > Domains.
+3. Agrega tu dominio, por ejemplo donpepito.pe.
+4. Vercel te mostrará los registros DNS.
+5. En tu proveedor de dominio configura:
+   - Registro A para el dominio raíz, o
+   - CNAME para www.
+6. Espera la propagación DNS y verifica el certificado HTTPS.
+
+En Render:
+1. Abre el Static Site.
+2. Ve a Settings > Custom Domains.
+3. Agrega el dominio.
+4. Configura los registros DNS que Render indique.
+5. Espera la verificación y el certificado HTTPS.
+
+Después de conectar el dominio, actualiza siteUrl y las Redirect URLs de
+Supabase con ese dominio definitivo.
+
+5.5. Variables de entorno
+-------------------------
+
+Vercel y Render permiten definir variables, pero esta app Angular las lee desde
+src/environments/environment.ts en tiempo de compilación. Si en el futuro usas
+variables de entorno, deberás adaptar el build (por ejemplo con un script que
+genere environment.ts). Por ahora no es necesario configurarlas.
+
+
+==================================================
+PARTE 6. COMPROBACIONES DESPUÉS DEL DESPLIEGUE
+==================================================
+
+Prueba en la URL publicada:
+
+[ ] Inicio carga sin errores y se ve el logo.
+[ ] El splash de carga aparece y desaparece.
+[ ] Carta muestra productos e imágenes.
+[ ] Promociones abre desde el navbar.
+[ ] Contacto muestra el mapa de OpenStreetMap.
+[ ] Carrito agrega y quita productos.
+[ ] Checkout permite elegir distrito y método de pago.
+[ ] /pedido/CODIGO muestra el seguimiento.
+[ ] Login y registro funcionan.
+[ ] /cuenta abre con sesión iniciada.
+[ ] /admin abre con un usuario administrador.
+[ ] Recargar directamente /promociones no da 404.
+[ ] Recargar directamente /contacto no da 404.
+[ ] En móvil se abre el menú y el carrito lateral.
+[ ] El botón de WhatsApp abre el chat correcto.
+
+Prueba de rutas SPA:
+1. Abre https://TU-DOMINIO/promociones directamente en una pestaña nueva.
+2. Recarga la página con F5.
+3. Debe cargar la app, no un 404.
+4. Repite con /contacto y /admin.
+
+
+==================================================
+PARTE 7. SOLUCIÓN DE PROBLEMAS
+==================================================
+
+Problema: 404 al recargar una ruta como /promociones
+Causa: falta la regla de rewrite SPA.
+Solución: agrega la regla /* -> /index.html en Vercel o Render.
+
+Problema: Vercel dice "No Output Directory named dist/..."
+Causa: la carpeta de salida está mal configurada.
+Solución: usa exactamente:
+  dist/don-pepito-web/browser
+
+Problema: la página queda en blanco
+Causa posible: build fallido, output incorrecto o base href distinto de /.
+Solución:
+1. Revisa los logs del build.
+2. Ejecuta npm run build en local.
+3. Confirma que index.html existe en la carpeta publicada.
+
+Problema: error de versión de Node durante el build
+Solución:
+- Vercel: Settings > General > Node.js Version > 22.x o 24.x.
+- Render: agrega NODE_VERSION = 24.16.0 y redeploy.
+
+Problema: los estilos o las fuentes no cargan
+Causa: rutas de assets o carpeta publicada incorrecta.
+Solución:
+1. Confirma que public/fonts y public/brand se copiaron al build.
+2. Verifica que la carpeta publicada sea dist/don-pepito-web/browser.
+3. Haz una recarga forzada con Ctrl + F5.
+
+Problema: el favicon o el logo se ven antiguos
+Causa: caché del navegador.
+Solución: Ctrl + F5 o probar en una ventana de incógnito.
+
+Problema: el mapa no aparece
+Causa: bloqueo de red o del iframe.
+Solución: verifica que el navegador permita iframes de openstreetmap.org.
+La app usa un iframe estático de OpenStreetMap en Inicio y Contacto.
+
+Problema: Supabase no conecta
+Solución:
+1. Revisa supabaseUrl y supabaseAnonKey.
+2. Verifica que las tablas y políticas RLS estén creadas.
+3. Si useDemoFallback es true, la app no consulta Supabase.
+4. Revisa la consola del navegador y los logs de Supabase.
+
+Problema: el login redirige a localhost
+Causa: Site URL o Redirect URLs de Supabase siguen en localhost.
+Solución: actualízalas con el dominio de producción.
+
+Problema: cambios nuevos no aparecen
+Solución:
+1. Confirma que hiciste git push.
+2. Revisa que el deploy haya terminado correctamente.
+3. Haz Ctrl + F5 para limpiar caché.
+
+
+==================================================
+PARTE 8. ACTUALIZAR Y REVERTIR
+==================================================
+
+Actualizar el sitio:
+
+  git add .
+  git commit -m "Descripción del cambio"
+  git push
+
+Vercel y Render redeployarán según su configuración.
+
+Revertir en Vercel:
+1. Abre el proyecto.
+2. Ve a Deployments.
+3. Elige un despliegue anterior.
+4. Usa "Promote to Production" o "Redeploy".
+
+Revertir en Render:
+1. Abre el Static Site.
+2. Ve a Deploys.
+3. Elige un deploy anterior y vuelve a desplegarlo.
+
+También puedes revertir en Git:
+
+  git log --oneline
+  git revert COMMIT_ID
+  git push
+
+
+==================================================
+RESUMEN RÁPIDO
+==================================================
+
+Vercel:
+  Build Command:      npm run build
+  Output Directory:   dist/don-pepito-web/browser
+  Rewrite:            /(.*)  ->  /index.html
+
+Render:
+  Build Command:      npm install && npm run build
+  Publish Directory:  dist/don-pepito-web/browser
+  Rewrite:            /*  ->  /index.html
+  NODE_VERSION:       24.16.0
+
+Recomendación:
+Para este proyecto Angular, Vercel es la opción más directa. Render funciona
+igual de bien como Static Site, siempre que configures la regla de rewrite.
