@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": {
+        "type": "service",
+        "service": "polleria-don-pepito"
+      }
+    }
+  ],
+  "services": {
+    "polleria-don-pepito": {
+      "root": ".",
+      "framework": "angular",
+      "buildCommand": "npm ci && npm run build"
+    }
+  }
+}

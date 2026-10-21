@@ -9,13 +9,26 @@ export class SupabaseService {
 
   constructor() {
     this.isConfigured = Boolean(environment.supabaseUrl && environment.supabaseAnonKey);
-    this.client = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
+
+    // Sin credenciales la app funciona en modo demo. Se crea un cliente inerte
+    // para no romper la inyección; nunca se usa porque los servicios consultan
+    // isConfigured/useDemoFallback antes de llamar a la red.
+    const url = this.isConfigured ? environment.supabaseUrl : 'https://sin-configurar.supabase.co';
+    const key = this.isConfigured ? environment.supabaseAnonKey : 'anon-key-no-configurada';
+
+    this.client = createClient(url, key, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
       },
     });
+
+    if (!this.isConfigured) {
+      console.info(
+        '[Supabase] Sin credenciales en el build: la aplicación usa datos de demostración.',
+      );
+    }
   }
 
   errorMessage(error: unknown): string {

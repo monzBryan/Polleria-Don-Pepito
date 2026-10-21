@@ -53,3 +53,8 @@ Thumbs.db
 /dev-server.log
 /.freebuff/
 /.secrets/
+
+/.vercel/
+
+.vercel
+.env*

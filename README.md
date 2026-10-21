@@ -1,59 +1,65 @@
-# DonPepitoWeb
+# Pollería Don Pepito — Web
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.0.
+SPA Angular 22 de la pollería (carta, carrito, checkout, seguimiento de pedidos,
+panel de administración) con datos de demostración y conexión opcional a
+Supabase.
 
-## Development server
+## Producción
 
-To start a local development server, run:
+| Dato | Valor |
+|---|---|
+| Dominio | https://polleria-don-pepito.vercel.app |
+| Hosting | Vercel (servicio estático, preset Angular + Services) |
+| Rewrite SPA | `vercel.json` envía todo el tráfico al servicio Angular, que resuelve `index.html` |
+| Build | `npm ci && npm run build` → `dist/don-pepito-web/browser` |
+
+Cada despliegue se publica con:
 
 ```bash
-ng serve
+npx vercel deploy --prod --yes
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Credenciales y configuración
 
-## Code scaffolding
+Ninguna credencial vive en el repositorio. `tools/generate-env.mjs` genera
+`src/environments/env.generated.ts` (ignorado por Git) antes de `build`,
+`start` y `test`, leyendo variables de entorno del hosting o `.env.local`:
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+| Variable | Uso |
+|---|---|
+| `SITE_URL` | Dominio público (canonical, Open Graph). En Vercel ya está configurada. |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Opcionales. Sin ellas la app compila en modo demo sin claves en el bundle. |
+| `USE_DEMO_FALLBACK` | `true` por defecto: datos locales. |
+| `DEMO_*` | Cuentas demo del login (`admin@donpepito.pe` / `admin123`, `cliente@demo.pe` / `demo1234`). |
+
+Referencia: [.env.example](.env.example). Nunca uses la `service_role` key en
+este frontend.
+
+En Vercel las variables se administran con `vercel env add NOMBRE production`.
+Crear el archivo `.env.local` para desarrollo local (no se versiona).
+
+## Base de datos
+
+Los scripts de Supabase están en [supabase/](supabase/) y su documentación en
+[supabase/README.md](supabase/README.md). Para pasar de modo demo a datos
+reales: configurar `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+`USE_DEMO_FALLBACK=false` y volver a desplegar.
+
+## Desarrollo
+
+```bash
+npm install        # genera también env.generated.ts
+npm start          # http://localhost:4200
+npm run build      # dist/don-pepito-web/browser
+npm test -- --watch=false
+```
+
+## Generar código
 
 ```bash
 ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
 ng generate --help
 ```
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Para más información sobre Angular CLI visita la
+[documentación oficial](https://angular.dev/tools/cli).

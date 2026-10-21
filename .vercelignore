@@ -1,0 +1,15 @@
+# No subir artefactos locales ni credenciales a Vercel
+dist
+.angular
+node_modules
+.git
+.secrets
+.freebuff
+.vscode
+dev-server.log
+1.txt
+docs
+supabase
+tools/process-logo.ps1
+.env
+.env.local
